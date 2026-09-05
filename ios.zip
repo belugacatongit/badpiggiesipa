@@ -15,7 +15,7 @@ jobs:
 
     - name: Automatically Unzip Source Code
       run: |
-        unzip *.zip
+        unzip -q ios.zip || unzip -q IOS.zip || unzip -q *.zip
         echo "Files extracted successfully"
 
     - name: Set up Xcode Version
