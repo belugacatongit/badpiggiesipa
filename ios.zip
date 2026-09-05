@@ -1,49 +1,21 @@
-name: Build iOS App from Zip
+name: Force Unzip Repository
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: macos-latest
-
+  unpack:
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Automatically Unzip Source Code
+    - name: Unpack Code
       run: |
-        unzip -q ios.zip || unzip -q IOS.zip || unzip -q *.zip
-        echo "Files extracted successfully"
-
-    - name: Set up Xcode Version
-      uses: maxim-lobanov/setup-xcode@v1
+        unzip -o ios.zip || unzip -o *.zip
+        rm -f *.zip
+        
+    - name: Commit Unpacked Folders
+      uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        xcode-version: 'latest-stable'
-
-    - name: Configure Package Dependency Strategy
-      run: |
-        defaults write com.apple.dt.Xcode IDEPackageDependencySCMToRegistryTransformation useRegistryIdentityAndSources
-
-    - name: Compile iOS App
-      run: |
-        xcodebuild clean build \
-          -project **/BadPigsGoInLava.xcodeproj \
-          -scheme BadPigsGoInLava \
-          -sdk iphoneos \
-          -configuration Release \
-          CODE_SIGNING_ALLOWED=NO
-
-    - name: Create Unsigned IPA Package
-      run: |
-        mkdir -p Payload
-        mv build/Release-iphoneos/*.app Payload/ 2>/dev/null || mv **/build/Release-iphoneos/*.app Payload/ 2>/dev/null || mv *.app Payload/
-        zip -r finished-app.ipa Payload
-
-    - name: Upload Finished App
-      uses: actions/upload-artifact@v4
-      with:
-        name: ios-app-package
-        path: finished-app.ipa
+        commit_message: "Cleanly extracted source code folders"
