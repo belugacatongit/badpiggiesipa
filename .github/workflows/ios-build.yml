@@ -1,5 +1,3 @@
-
-
 name: Build iOS App from Zip
 
 on:
@@ -18,7 +16,9 @@ jobs:
     - name: Automatically Unzip Source Code
       run: |
         unzip *.zip
-        echo "Files extracted successfully"
+        echo "=== LISTING ALL UNZIPPED FILES ==="
+        find . -maxdepth 3 -not -path '*/.*'
+        echo "=================================="
 
     - name: Set up Xcode Version
       uses: maxim-lobanov/setup-xcode@v1
@@ -33,15 +33,3 @@ jobs:
           -sdk iphoneos \
           -configuration Release \
           CODE_SIGNING_ALLOWED=NO
-
-    - name: Create Unsigned IPA Package
-      run: |
-        mkdir -p Payload
-        mv build/Release-iphoneos/*.app Payload/ 2>/dev/null || mv */build/Release-iphoneos/*.app Payload/
-        zip -r finished-app.ipa Payload
-
-    - name: Upload Finished App
-      uses: actions/upload-artifact@v4
-      with:
-        name: ios-app-package
-        path: finished-app.ipa
