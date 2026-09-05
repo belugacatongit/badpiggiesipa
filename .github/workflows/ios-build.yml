@@ -1,1 +1,45 @@
+name: Build iOS App from Zip
 
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Automatically Unzip Source Code
+      run: |
+        unzip *.zip
+        echo "Files extracted successfully"
+
+    - name: Set up Xcode Version
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: 'latest-stable'
+
+    - name: Compile iOS App
+      run: |
+        xcodebuild clean build \
+          -project */*.xcodeproj \
+          -scheme $(xcodebuild -list -json | plutil -extract schemes.0 raw -) \
+          -sdk iphoneos \
+          -configuration Release \
+          CODE_SIGNING_ALLOWED=NO
+
+    - name: Create Unsigned IPA Package
+      run: |
+        mkdir -p Payload
+        mv build/Release-iphoneos/*.app Payload/ 2>/dev/null || mv */build/Release-iphoneos/*.app Payload/
+        zip -r finished-app.ipa Payload
+
+    - name: Upload Finished App
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-app-package
+        path: finished-app.ipa
